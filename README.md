@@ -100,7 +100,7 @@ format_p(0.00005, digits = 4)
 
 This prevents positive p-values from being reported as values such as p = .000.
 
-Development status
+#Development status
 
 pubformat is in early development.
 
@@ -108,6 +108,50 @@ The current focus is to make format_p() reliable, well-tested, and useful before
 
 Potential future formatting functions may include confidence intervals, effect sizes, estimates, percentages, and other commonly reported statistics.
 
-``` r
+## Research workflow examples
+
+`format_p()` is designed to work with p-values produced during ordinary statistical analysis in R.
+
+For example, a linear model might produce:
+
+model <- lm(mpg ~ wt + am, data = mtcars)
+
+summary(model)$coefficients[, "Pr(>|t|)"]
+
+The resulting p-values can be passed directly to `format_p()`:
+
+p_values <- summary(model)$coefficients[, "Pr(>|t|)"]
+
+format_p(p_values)
+
+Because `format_p()` is vectorized, each p-value is formatted consistently without requiring manual rounding or character manipulation.
+
+Significance codes can also be added when preparing results for a table:
+
+format_p(p_values, sig = TRUE)
+
+For multiple-comparison procedures, adjusted p-values can be formatted in the same way:
+
+raw_p <- c(.012, .031, .0004, .18)
+
+adjusted_p <- p.adjust(
+  raw_p,
+  method = "bonferroni"
+)
+
+format_p(adjusted_p)
+
+format_p()` does not perform the statistical correction itself. It formats the numeric results produced by R while preserving important reporting boundaries.
+
+For example:
+
+format_p(.001)
+#> "p = .001"
+
+format_p(.0009)
+#> "p < .001"
+
+The distinction between `p = .001` and `p < .001` is retained rather than treating the reporting threshold as a significance decision rule.
+
 library(pubformat)
 
