@@ -10,7 +10,7 @@ The first function, format_p(), provides publication-friendly formatting for p-v
 
 ## Installation
 
-pubformat is currently under development and is not yet available from CRAN.
+pubformat is currently under development and **is not** yet available from CRAN.
 
 If you have a local copy of the package source, you can install it with:
 
@@ -110,6 +110,4 @@ Potential future formatting functions may include confidence intervals, effect s
 
 ``` r
 library(pubformat)
-## basic example code
-```
 
