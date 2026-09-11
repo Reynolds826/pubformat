@@ -2,8 +2,10 @@ Package: pubformat
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("RJ", "Ballotti", , "rballotti@coastal.edu", role = c("aut", "cre"))
+Description: The goal of pubformat is to provide an R package for converting statistical results into consistent, publication-ready output.
+The package is being developed around a simple principle: formatting should improve how statistical results are reported without changing the underlying statistical decision.
+The first function, format_p(), provides publication-friendly formatting for p-values, including fixed decimal places, small-value reporting thresholds, optional significance codes, and careful handling of important statistical boundaries..
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
