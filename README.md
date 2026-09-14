@@ -233,3 +233,52 @@ The distinction between `p = .001` and `p < .001` is retained rather than treati
 Current functionality includes publication-ready formatting for p-values and confidence intervals.
 
 Future formatting functions may include effect sizes, estimates, percentages, and other commonly reported statistics.
+
+## Correlations
+
+`format_r()` converts numeric correlation coefficients into publication-ready text.
+
+```r
+format_r(0.42)
+#> "r = .42"
+```
+
+Negative correlations are formatted in the same way:
+
+```r
+format_r(-0.31)
+#> "r = -.31"
+```
+
+Because correlation coefficients cannot exceed 1 in absolute value, leading zeros are omitted by default.
+
+```r
+format_r(0.42)
+#> "r = .42"
+```
+
+Leading zeros can be retained when needed:
+
+```r
+format_r(0.42, leading_zero = TRUE)
+#> "r = 0.42"
+```
+
+The number of decimal places can also be controlled:
+
+```r
+format_r(0.4231, digits = 3)
+#> "r = .423"
+```
+
+Like the other `pubformat` functions, `format_r()` accepts vectors:
+
+```r
+format_r(c(0.42, -0.31, 0, 0.78))
+#> "r = .42"
+#> "r = -.31"
+#> "r = .00"
+#> "r = .78"
+```
+
+`format_r()` formats the correlation coefficient only. Associated p-values can be formatted separately with `format_p()`.

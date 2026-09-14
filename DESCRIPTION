@@ -1,16 +1,12 @@
 Package: pubformat
-Title: What the Package Does (One Line, Title Case)
+Title: Publication-Ready Formatting for Statistical Results
 Version: 0.0.0.9000
-Authors@R: 
-    person("RJ", "Ballotti", , "rballotti@coastal.edu", role = c("aut", "cre"))
-Description: The goal of pubformat is to provide an R package for converting statistical results into consistent, publication-ready output.
-The package is being developed around a simple principle: formatting should improve how statistical results are reported without changing the underlying statistical decision.
-The first function, format_p(), provides publication-friendly formatting for p-values, including fixed decimal places, small-value reporting thresholds, optional significance codes, and careful handling of important statistical boundaries..
+Authors@R: person("RJ", "Ballotti", email = "rballotti@coastal.edu", role = c("aut", "cre"))
+Description: Provides tools for converting statistical results into consistent, publication-ready character output. Current functionality includes formatting p-values, confidence intervals, and correlation coefficients using publication-friendly conventions. The package emphasizes consistent reporting while preserving the underlying statistical results and statistical decision-making.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-Suggests: 
-    testthat (>= 3.0.0)
+Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0
 URL: https://github.com/Reynolds826/pubformat
