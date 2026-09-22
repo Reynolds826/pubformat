@@ -1,0 +1,238 @@
+---
+
+title: "Using pubformat"
+output: rmarkdown::html_vignette
+vignette: >
+%\VignetteIndexEntry{Using pubformat}
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteEncoding{UTF-8}
+-------------------------
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Overview
+
+`pubformat` provides tools for converting numeric statistical results into consistent, publication-ready character output.
+
+The package is designed around a simple principle:
+
+> Statistical analysis and statistical formatting should remain separate.
+
+R or another statistical procedure produces the numeric result. `pubformat` handles the reporting step without changing the underlying statistical result or decision.
+
+```{r}
+library(pubformat)
+```
+
+## Formatting p-values
+
+`format_p()` converts numeric p-values into publication-ready text.
+
+```{r}
+format_p(0.048)
+format_p(0.0002)
+```
+
+The reporting threshold is strict. A value equal to `.001` is retained, while a value below `.001` is reported using less-than notation.
+
+```{r}
+format_p(0.001)
+format_p(0.0009)
+```
+
+Optional significance codes can be added when useful for tables or other compact displays.
+
+```{r}
+format_p(0.048, sig = TRUE)
+format_p(0.006, sig = TRUE)
+format_p(0.0002, sig = TRUE)
+```
+
+Importantly, significance codes are determined from the original numeric p-value rather than its rounded display value.
+
+```{r}
+format_p(0.0499, sig = TRUE)
+```
+
+## Formatting confidence intervals
+
+`format_ci()` combines numeric lower and upper confidence limits into publication-ready interval notation.
+
+```{r}
+format_ci(1.08, 1.87)
+```
+
+The confidence level can be changed.
+
+```{r}
+format_ci(1.08, 1.87, level = 0.99)
+```
+
+Leading zeros are retained by default because the appropriate convention depends on the statistic being reported.
+
+```{r}
+format_ci(0.21, 0.48)
+```
+
+For statistics that cannot exceed 1 in absolute value, such as correlations, leading zeros can be omitted.
+
+```{r}
+format_ci(0.21, 0.48, leading_zero = FALSE)
+```
+
+## Formatting correlations
+
+For Pearson correlations, `format_r()` provides a concise formatter.
+
+```{r}
+format_r(0.42)
+format_r(-0.31)
+```
+
+For Pearson, Spearman, or Kendall correlations, `format_cor()` selects the appropriate reporting symbol.
+
+```{r}
+format_cor(0.42, method = "pearson")
+format_cor(0.42, method = "spearman")
+format_cor(0.42, method = "kendall")
+```
+
+`format_cor()` formats an existing coefficient. It does not calculate the correlation itself.
+
+For example:
+
+```{r}
+rho <- cor(
+  mtcars$mpg,
+  mtcars$wt,
+  method = "spearman"
+)
+
+format_cor(rho, method = "spearman")
+```
+
+## Formatting percentages
+
+`format_percent()` interprets numeric values as proportions by default.
+
+```{r}
+format_percent(0.423)
+```
+
+Values that are already expressed as percentages can be identified explicitly.
+
+```{r}
+format_percent(42.3, input = "percent")
+```
+
+This distinction prevents accidental rescaling of values.
+
+```{r}
+format_percent(0.42)
+format_percent(42, input = "percent")
+```
+
+The function is vectorized.
+
+```{r}
+format_percent(c(0.25, 0.50, 0.75))
+```
+
+## A typical analysis-to-publication workflow
+
+Consider a simple linear model using the built-in `mtcars` data.
+
+```{r}
+model <- lm(mpg ~ wt, data = mtcars)
+
+summary(model)
+```
+
+The analysis produces numeric statistical results. Those values can then be extracted and formatted separately.
+
+### P-value
+
+```{r}
+p_value <- summary(model)$coefficients["wt", "Pr(>|t|)"]
+
+p_value
+format_p(p_value)
+```
+
+### Confidence interval
+
+```{r}
+ci <- confint(model, "wt")
+
+ci
+format_ci(ci[1], ci[2])
+```
+
+### Correlation
+
+```{r}
+r_value <- cor(mtcars$mpg, mtcars$wt)
+
+r_value
+format_r(r_value)
+```
+
+The workflow is therefore:
+
+```text
+statistical analysis
+        |
+        v
+numeric statistical results
+        |
+        v
+pubformat
+        |
+        v
+publication-ready output
+```
+
+`pubformat` does not replace statistical analysis functions. Its purpose is to make the final reporting step more consistent, reproducible, and convenient.
+
+## Vectorized workflows
+
+The formatting functions are designed to accept vectors, which makes them useful when preparing tables or formatting several results at once.
+
+```{r}
+p_values <- c(0.032, 0.006, 0.0004, 0.213)
+
+format_p(p_values)
+```
+
+```{r}
+correlations <- c(0.42, -0.31, 0.18)
+
+format_r(correlations)
+```
+
+```{r}
+proportions <- c(0.24, 0.51, 0.83)
+
+format_percent(proportions)
+```
+
+Missing values are preserved rather than silently converted into text.
+
+```{r}
+format_p(c(0.032, NA, 0.213))
+```
+
+## Design philosophy
+
+The package separates three concepts that can otherwise become conflated:
+
+1. **Statistical calculation** — performed by functions such as `lm()`, `cor()`, `confint()`, or other statistical packages.
+2. **Statistical decisions** — made using the original numeric results and the researcher's chosen inferential criteria.
+3. **Publication formatting** — performed by `pubformat` after the analysis is complete.
+
+This separation allows results to be formatted consistently without changing the values on which statistical conclusions are based.
