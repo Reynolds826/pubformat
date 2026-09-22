@@ -12,6 +12,8 @@ The first function, `format_p()`, provides publication-friendly formatting for p
 
 The second function, `format_ci()`, converts numeric confidence interval limits into publication-ready formatting.
 
+The third and fourth functions 'format_r()' and 'format_cor()' converts raw correlation coefficients into publication ready formatting.
+
 ## Installation
 
 `pubformat` is currently under development and is **not yet** available from CRAN.
