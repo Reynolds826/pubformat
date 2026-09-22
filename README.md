@@ -282,3 +282,53 @@ format_r(c(0.42, -0.31, 0, 0.78))
 ```
 
 `format_r()` formats the correlation coefficient only. Associated p-values can be formatted separately with `format_p()`.
+## Correlation methods
+
+For Pearson, Spearman, and Kendall correlations, `format_cor()` automatically uses the appropriate statistical symbol.
+
+Pearson correlation:
+
+```r
+format_cor(0.42, method = "pearson")
+#> "r = .42"
+```
+
+Spearman correlation:
+
+```r
+format_cor(0.42, method = "spearman")
+#> "ρ = .42"
+```
+
+Kendall correlation:
+
+```r
+format_cor(0.42, method = "kendall")
+#> "τ = .42"
+```
+
+Negative coefficients are formatted consistently:
+
+```r
+format_cor(-0.31, method = "spearman")
+#> "ρ = -.31"
+
+format_cor(-0.31, method = "kendall")
+#> "τ = -.31"
+```
+
+The correlation method controls the reporting symbol only. `format_cor()` does not calculate the correlation or determine statistical significance.
+
+For example, a Spearman correlation can first be calculated in R and then formatted:
+
+```r
+result <- cor(
+  mtcars$mpg,
+  mtcars$wt,
+  method = "spearman"
+)
+
+format_cor(result, method = "spearman")
+```
+
+Associated p-values can be formatted separately with `format_p()`.
