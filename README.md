@@ -4,37 +4,48 @@
 
 <!-- badges: end -->
 
-The goal of `pubformat` is to provide an R package for converting statistical results into consistent, publication-ready output.
+`pubformat` is an R package for converting statistical results into consistent, publication-ready output.
 
-The package is being developed around a simple principle: **formatting should improve how statistical results are reported without changing the underlying statistical decision**.
+The package is built around a simple principle: **formatting should improve how statistical results are reported without changing the underlying statistical result or statistical decision**.
 
-The first function, `format_p()`, provides publication-friendly formatting for p-values, including fixed decimal places, small-value reporting thresholds, optional significance codes, and careful handling of important statistical boundaries.
+Current functions include:
 
-The second function, `format_ci()`, converts numeric confidence interval limits into publication-ready formatting.
+* `format_p()` for p-values
+* `format_ci()` for confidence intervals
+* `format_r()` for Pearson correlation coefficients
+* `format_cor()` for Pearson, Spearman, and Kendall correlations
+* `format_percent()` for proportions and percentages
+
+The package uses publication-friendly defaults while allowing common formatting choices to be customized.
 
 The third and fourth functions 'format_r()' and 'format_cor()' converts raw correlation coefficients into publication ready formatting.
 
 ## Installation
 
-`pubformat` is currently under development and is **not yet** available from CRAN.
+`pubformat` is currently under development and is **not yet available from CRAN**.
 
-If you have a local copy of the package source, you can install it with:
+The development version can be installed from GitHub with:
+
+```r
+# install.packages("remotes")
+remotes::install_github("Reynolds826/pubformat")
+```
+
+If you are working from a local copy of the package source, you can also install it with:
 
 ```r
 devtools::install()
 ```
 
-Development installation instructions will be updated when the package is made publicly available.
-
-## P-values
-
-Load the package:
+Load the package with:
 
 ```r
 library(pubformat)
 ```
 
-Format a standard p-value:
+## P-values
+
+`format_p()` converts numeric p-values into publication-ready text.
 
 ```r
 format_p(0.048)
@@ -84,7 +95,7 @@ format_p(0.0499, sig = TRUE)
 #> "p = .050 *"
 ```
 
-Although the displayed value rounds to `.050`, the significance classification correctly reflects the underlying value of `.0499`.
+Although the displayed value rounds to `.050`, the significance classification reflects the underlying value of `.0499`.
 
 ### Vectorized formatting
 
@@ -133,7 +144,7 @@ This prevents positive p-values from being reported as values such as `p = .000`
 
 ## Confidence intervals
 
-`format_ci()` converts numeric confidence interval limits into publication-ready text.
+`format_ci()` converts numeric lower and upper confidence limits into publication-ready text.
 
 ```r
 format_ci(1.08, 1.87)
@@ -161,7 +172,7 @@ format_ci(0.21, 0.48, leading_zero = FALSE)
 #> "95% CI [.21, .48]"
 ```
 
-The function also works with vectors of confidence limits:
+`format_ci()` also accepts vectors:
 
 ```r
 lower <- c(1.08, -0.42, 2.15)
@@ -173,32 +184,171 @@ format_ci(lower, upper)
 #> "95% CI [2.15, 3.02]"
 ```
 
-## Research workflow examples
+## Correlations
 
-`format_p()` is designed to work with p-values produced during ordinary statistical analysis in R.
+### Pearson correlations
 
-For example, a linear model might produce:
+`format_r()` provides a simple formatter for Pearson correlation coefficients.
+
+```r
+format_r(0.42)
+#> "r = .42"
+```
+
+Negative correlations are handled consistently:
+
+```r
+format_r(-0.31)
+#> "r = -.31"
+```
+
+Because correlation coefficients cannot exceed 1 in absolute value, leading zeros are omitted by default.
+
+They can be retained when needed:
+
+```r
+format_r(0.42, leading_zero = TRUE)
+#> "r = 0.42"
+```
+
+Decimal precision can also be controlled:
+
+```r
+format_r(0.4231, digits = 3)
+#> "r = .423"
+```
+
+Like the other `pubformat` functions, `format_r()` accepts vectors:
+
+```r
+format_r(c(0.42, -0.31, 0, 0.78))
+#> "r = .42"
+#> "r = -.31"
+#> "r = .00"
+#> "r = .78"
+```
+
+### Pearson, Spearman, and Kendall correlations
+
+`format_cor()` provides a general correlation formatter and automatically uses the symbol associated with the requested method.
+
+Pearson:
+
+```r
+format_cor(0.42, method = "pearson")
+#> "r = .42"
+```
+
+Spearman:
+
+```r
+format_cor(0.42, method = "spearman")
+#> "ρ = .42"
+```
+
+Kendall:
+
+```r
+format_cor(0.42, method = "kendall")
+#> "τ = .42"
+```
+
+Negative coefficients are formatted consistently:
+
+```r
+format_cor(-0.31, method = "spearman")
+#> "ρ = -.31"
+
+format_cor(-0.31, method = "kendall")
+#> "τ = -.31"
+```
+
+The `method` argument controls the reporting symbol only. `format_cor()` does not calculate the correlation or determine statistical significance.
+
+For example, a Spearman correlation can first be calculated in R and then formatted:
+
+```r
+result <- cor(
+  mtcars$mpg,
+  mtcars$wt,
+  method = "spearman"
+)
+
+format_cor(result, method = "spearman")
+```
+
+Associated p-values can be formatted separately with `format_p()`.
+
+## Percentages
+
+`format_percent()` converts proportions or already-scaled percentages into publication-ready percentage text.
+
+By default, values are interpreted as proportions:
+
+```r
+format_percent(0.423)
+#> "42.3%"
+```
+
+Decimal precision can be controlled with `digits`:
+
+```r
+format_percent(0.423, digits = 2)
+#> "42.30%"
+```
+
+If values are already expressed as percentages, use `input = "percent"`:
+
+```r
+format_percent(42.3, input = "percent")
+#> "42.3%"
+```
+
+This distinction prevents accidental rescaling:
+
+```r
+format_percent(0.42)
+#> "42.0%"
+
+format_percent(42, input = "percent")
+#> "42.0%"
+```
+
+`format_percent()` also accepts vectors:
+
+```r
+format_percent(c(0.25, 0.50, 0.75))
+#> "25.0%"
+#> "50.0%"
+#> "75.0%"
+```
+
+When values are supplied as already-scaled percentages, negative values and values greater than 100 are allowed. This is useful for quantities such as percent change:
+
+```r
+format_percent(-12.5, input = "percent")
+#> "-12.5%"
+
+format_percent(150, input = "percent")
+#> "150.0%"
+```
+
+## Research workflow example
+
+`pubformat` is designed to handle the reporting step after statistical analysis rather than perform the analysis itself.
+
+For example, a linear model can produce numeric p-values:
 
 ```r
 model <- lm(mpg ~ wt + am, data = mtcars)
 
-summary(model)$coefficients[, "Pr(>|t|)"]
-```
-
-The resulting p-values can be passed directly to `format_p()`:
-
-```r
 p_values <- summary(model)$coefficients[, "Pr(>|t|)"]
-
-format_p(p_values)
 ```
 
-Because `format_p()` is vectorized, each p-value is formatted consistently without requiring manual rounding or character manipulation.
-
-Significance codes can also be added when preparing results for a table:
+Those numeric results can then be formatted for reporting:
 
 ```r
-format_p(p_values, sig = TRUE)
+format_p(p_values)
 ```
 
 For multiple-comparison procedures, adjusted p-values can be formatted in the same way:
@@ -216,121 +366,36 @@ format_p(adjusted_p)
 
 `format_p()` does not perform the statistical correction itself. It formats the numeric results produced by R while preserving important reporting boundaries.
 
-For example:
+Similarly, statistics can be calculated first and formatted afterward:
 
 ```r
-format_p(.001)
-#> "p = .001"
+r_value <- cor(mtcars$mpg, mtcars$wt)
 
-format_p(.0009)
-#> "p < .001"
+format_r(r_value)
 ```
 
-The distinction between `p = .001` and `p < .001` is retained rather than treating the reporting threshold as a significance decision rule.
+The intended workflow is:
+
+```text
+statistical analysis
+        ↓
+numeric statistical results
+        ↓
+pubformat
+        ↓
+publication-ready output
+```
 
 ## Development status
 
 `pubformat` is in early development.
 
-Current functionality includes publication-ready formatting for p-values and confidence intervals.
+Current functionality includes publication-ready formatting for:
 
-Future formatting functions may include effect sizes, estimates, percentages, and other commonly reported statistics.
+* p-values
+* confidence intervals
+* Pearson correlations
+* Pearson, Spearman, and Kendall correlations
+* proportions and percentages
 
-## Correlations
-
-`format_r()` converts numeric correlation coefficients into publication-ready text.
-
-```r
-format_r(0.42)
-#> "r = .42"
-```
-
-Negative correlations are formatted in the same way:
-
-```r
-format_r(-0.31)
-#> "r = -.31"
-```
-
-Because correlation coefficients cannot exceed 1 in absolute value, leading zeros are omitted by default.
-
-```r
-format_r(0.42)
-#> "r = .42"
-```
-
-Leading zeros can be retained when needed:
-
-```r
-format_r(0.42, leading_zero = TRUE)
-#> "r = 0.42"
-```
-
-The number of decimal places can also be controlled:
-
-```r
-format_r(0.4231, digits = 3)
-#> "r = .423"
-```
-
-Like the other `pubformat` functions, `format_r()` accepts vectors:
-
-```r
-format_r(c(0.42, -0.31, 0, 0.78))
-#> "r = .42"
-#> "r = -.31"
-#> "r = .00"
-#> "r = .78"
-```
-
-`format_r()` formats the correlation coefficient only. Associated p-values can be formatted separately with `format_p()`.
-## Correlation methods
-
-For Pearson, Spearman, and Kendall correlations, `format_cor()` automatically uses the appropriate statistical symbol.
-
-Pearson correlation:
-
-```r
-format_cor(0.42, method = "pearson")
-#> "r = .42"
-```
-
-Spearman correlation:
-
-```r
-format_cor(0.42, method = "spearman")
-#> "ρ = .42"
-```
-
-Kendall correlation:
-
-```r
-format_cor(0.42, method = "kendall")
-#> "τ = .42"
-```
-
-Negative coefficients are formatted consistently:
-
-```r
-format_cor(-0.31, method = "spearman")
-#> "ρ = -.31"
-
-format_cor(-0.31, method = "kendall")
-#> "τ = -.31"
-```
-
-The correlation method controls the reporting symbol only. `format_cor()` does not calculate the correlation or determine statistical significance.
-
-For example, a Spearman correlation can first be calculated in R and then formatted:
-
-```r
-result <- cor(
-  mtcars$mpg,
-  mtcars$wt,
-  method = "spearman"
-)
-
-format_cor(result, method = "spearman")
-```
-
-Associated p-values can be formatted separately with `format_p()`.
+Future development may include formatting for effect sizes, estimates, sample sizes, test statistics, and other commonly reported statistical results.

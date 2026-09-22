@@ -3,4 +3,5 @@
 export(format_ci)
 export(format_cor)
 export(format_p)
+export(format_percent)
 export(format_r)
