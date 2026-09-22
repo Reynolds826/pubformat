@@ -18,7 +18,6 @@ Current functions include:
 
 The package uses publication-friendly defaults while allowing common formatting choices to be customized.
 
-The third and fourth functions 'format_r()' and 'format_cor()' converts raw correlation coefficients into publication ready formatting.
 
 ## Installation
 
