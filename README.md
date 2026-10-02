@@ -18,10 +18,19 @@ Current functions include:
 
 The package uses publication-friendly defaults while allowing common formatting choices to be customized.
 
-
 ## Installation
 
-`pubformat` is currently under development and is **not yet available from CRAN**.
+You can install the released version of `pubformat` from CRAN:
+
+```r
+install.packages("pubformat")
+```
+
+Load the package with:
+
+```r
+library(pubformat)
+```
 
 The development version can be installed from GitHub with:
 
@@ -34,12 +43,6 @@ If you are working from a local copy of the package source, you can also install
 
 ```r
 devtools::install()
-```
-
-Load the package with:
-
-```r
-library(pubformat)
 ```
 
 ## P-values
@@ -387,7 +390,7 @@ publication-ready output
 
 ## Development status
 
-`pubformat` is in early development.
+`pubformat` is available on CRAN and remains under active development.
 
 Current functionality includes publication-ready formatting for:
 
