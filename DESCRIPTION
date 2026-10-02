@@ -1,6 +1,6 @@
 Package: pubformat
 Title: Publication-Ready Formatting for Statistical Results
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: person("RJ", "Ballotti", email = "rballotti@coastal.edu", role = c("aut", "cre"))
 Description: Provides tools for converting statistical results into consistent, publication-ready character output. Current functionality includes formatting p-values, confidence intervals, and correlation coefficients using publication-friendly conventions. The package emphasizes consistent reporting while preserving the underlying statistical results and statistical decision-making.
 License: MIT + file LICENSE
