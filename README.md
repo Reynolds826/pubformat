@@ -15,6 +15,8 @@ Current functions include:
 * `format_r()` for Pearson correlation coefficients
 * `format_cor()` for Pearson, Spearman, and Kendall correlations
 * `format_percent()` for proportions and percentages
+* `format_t()` for t test statistics
+* `format_f()` for F test statistics
 
 The package uses publication-friendly defaults while allowing common formatting choices to be customized.
 
@@ -335,6 +337,199 @@ format_percent(150, input = "percent")
 #> "150.0%"
 ```
 
+## Test statistics
+
+`format_t()` and `format_f()` convert already-computed test statistics and their degrees of freedom into publication-ready text.
+
+These functions do not perform the statistical test. They format numeric results produced by R or another statistical procedure.
+
+### t statistics
+
+`format_t()` formats a t statistic together with its degrees of freedom:
+
+```r
+format_t(0.86, df = 20)
+#> "t(20) = 0.86"
+```
+
+Negative test statistics are preserved:
+
+```r
+format_t(-2.14, df = 48)
+#> "t(48) = -2.14"
+```
+
+Fractional degrees of freedom, such as those produced by some approximation methods, are also supported:
+
+```r
+format_t(3.27, df = 105.5)
+#> "t(105.5) = 3.27"
+```
+
+A p-value can be supplied directly:
+
+```r
+format_t(
+  0.86,
+  df = 20,
+  p = 0.041
+)
+#> "t(20) = 0.86, p = .041"
+```
+
+The p-value is formatted using `format_p()`, so the same reporting rules are retained:
+
+```r
+format_t(
+  3.10,
+  df = 40,
+  p = 0.001
+)
+#> "t(40) = 3.10, p = .001"
+
+format_t(
+  3.20,
+  df = 40,
+  p = 0.0009
+)
+#> "t(40) = 3.20, p < .001"
+```
+
+### F statistics
+
+`format_f()` formats an F statistic with numerator and denominator degrees of freedom:
+
+```r
+format_f(
+  2.50,
+  df1 = 2,
+  df2 = 30
+)
+#> "F(2, 30) = 2.50"
+```
+
+Fractional degrees of freedom are retained when present:
+
+```r
+format_f(
+  4.4344,
+  df1 = 1,
+  df2 = 3262.9
+)
+#> "F(1, 3262.9) = 4.43"
+```
+
+A p-value can be included in the same output:
+
+```r
+format_f(
+  4.4344,
+  df1 = 1,
+  df2 = 3262.9,
+  p = 0.03530
+)
+#> "F(1, 3262.9) = 4.43, p = .035"
+```
+
+Very small p-values are handled through `format_p()`:
+
+```r
+format_f(
+  107.8924,
+  df1 = 1,
+  df2 = 86.7,
+  p = 2e-16
+)
+#> "F(1, 86.7) = 107.89, p < .001"
+```
+
+This can be useful when converting model output such as ANOVA or mixed-model results into manuscript-ready text.
+
+### Styled statistical symbols
+
+By default, `format_t()` and `format_f()` return plain character output suitable for the R console:
+
+```r
+format_f(
+  4.4344,
+  df1 = 1,
+  df2 = 3262.9,
+  p = 0.03530
+)
+#> "F(1, 3262.9) = 4.43, p = .035"
+```
+
+For output formats that support rendered text, the `style` argument can produce markup for statistical symbols.
+
+Markdown:
+
+```r
+format_f(
+  4.4344,
+  df1 = 1,
+  df2 = 3262.9,
+  p = 0.03530,
+  style = "markdown"
+)
+#> "*F*(1, 3262.9) = 4.43, *p* = .035"
+```
+
+HTML:
+
+```r
+format_t(
+  0.86,
+  df = 20,
+  p = 0.041,
+  style = "html"
+)
+#> "<i>t</i>(20) = 0.86, <i>p</i> = .041"
+```
+
+LaTeX:
+
+```r
+format_t(
+  0.86,
+  df = 20,
+  p = 0.041,
+  style = "latex"
+)
+#> "\\textit{t}(20) = 0.86, \\textit{p} = .041"
+```
+
+The plain R console does not render italics, so styled output is intended for formats such as Markdown, HTML, or LaTeX.
+
+### Vectorized test-statistic formatting
+
+Like the other `pubformat` functions, `format_t()` and `format_f()` accept vectors.
+
+```r
+format_t(
+  statistic = c(0.86, -2.14, 3.27),
+  df = c(20, 48, 105.5),
+  p = c(0.041, 0.038, 0.0012)
+)
+
+#> "t(20) = 0.86, p = .041"
+#> "t(48) = -2.14, p = .038"
+#> "t(105.5) = 3.27, p = .001"
+```
+
+Similarly:
+
+```r
+format_f(
+  statistic = c(2.50, 4.4344),
+  df1 = c(2, 1),
+  df2 = c(30, 3262.9),
+  p = c(0.091, 0.03530)
+)
+
+#> "F(2, 30) = 2.50, p = .091"
+#> "F(1, 3262.9) = 4.43, p = .035"
+```
+
 ## Research workflow example
 
 `pubformat` is designed to handle the reporting step after statistical analysis rather than perform the analysis itself.
@@ -376,6 +571,19 @@ r_value <- cor(mtcars$mpg, mtcars$wt)
 format_r(r_value)
 ```
 
+Test statistics can also be taken from model output and formatted together with their degrees of freedom and p-values:
+
+```r
+format_f(
+  statistic = 4.4344,
+  df1 = 1,
+  df2 = 3262.9,
+  p = 0.03530
+)
+
+#> "F(1, 3262.9) = 4.43, p = .035"
+```
+
 The intended workflow is:
 
 ```text
@@ -399,5 +607,9 @@ Current functionality includes publication-ready formatting for:
 * Pearson correlations
 * Pearson, Spearman, and Kendall correlations
 * proportions and percentages
+* t test statistics
+* F test statistics
+* paired test statistics and p-values
+* plain, Markdown, HTML, and LaTeX output for t and F statistical symbols
 
-Future development may include formatting for effect sizes, estimates, sample sizes, test statistics, and other commonly reported statistical results.
+Future development may include formatting for effect sizes, estimates, sample sizes, additional test statistics, and other commonly reported statistical results.
