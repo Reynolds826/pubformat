@@ -1,12 +1,11 @@
 ---
-
 title: "Using pubformat"
 output: rmarkdown::html_vignette
 vignette: >
-%\VignetteIndexEntry{Using pubformat}
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteEncoding{UTF-8}
--------------------------
+  %\VignetteIndexEntry{Using pubformat}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -28,6 +27,15 @@ R or another statistical procedure produces the numeric result. `pubformat` hand
 ```{r}
 library(pubformat)
 ```
+
+Current functionality includes formatting for:
+
+- p-values
+- confidence intervals
+- Pearson, Spearman, and Kendall correlations
+- proportions and percentages
+- t test statistics
+- F test statistics
 
 ## Formatting p-values
 
@@ -116,6 +124,8 @@ rho <- cor(
 format_cor(rho, method = "spearman")
 ```
 
+Associated p-values can be formatted separately with `format_p()`.
+
 ## Formatting percentages
 
 `format_percent()` interprets numeric values as proportions by default.
@@ -142,6 +152,167 @@ The function is vectorized.
 ```{r}
 format_percent(c(0.25, 0.50, 0.75))
 ```
+
+Values supplied with `input = "percent"` may also be negative or greater than 100, which is useful for quantities such as percent change.
+
+```{r}
+format_percent(-12.5, input = "percent")
+format_percent(150, input = "percent")
+```
+
+## Formatting test statistics
+
+`format_t()` and `format_f()` convert already-computed test statistics and their degrees of freedom into publication-ready text.
+
+These functions do not perform statistical tests. They format numeric results produced by R or another statistical procedure.
+
+### t statistics
+
+`format_t()` formats a t statistic together with its degrees of freedom.
+
+```{r}
+format_t(0.86, df = 20)
+```
+
+Negative statistics are preserved.
+
+```{r}
+format_t(-2.14, df = 48)
+```
+
+Fractional degrees of freedom are also supported.
+
+```{r}
+format_t(3.27, df = 105.5)
+```
+
+A p-value can be supplied directly.
+
+```{r}
+format_t(
+  0.86,
+  df = 20,
+  p = 0.041
+)
+```
+
+The p-value is formatted internally using `format_p()`. This means the same reporting rules are retained.
+
+```{r}
+format_t(
+  statistic = c(3.10, 3.20),
+  df = c(40, 40),
+  p = c(0.001, 0.0009)
+)
+```
+
+The underlying distinction between `p = .001` and `p < .001` is therefore preserved.
+
+### F statistics
+
+`format_f()` formats an F statistic together with numerator and denominator degrees of freedom.
+
+```{r}
+format_f(
+  2.50,
+  df1 = 2,
+  df2 = 30
+)
+```
+
+Fractional degrees of freedom are retained when present.
+
+```{r}
+format_f(
+  4.4344,
+  df1 = 1,
+  df2 = 3262.9
+)
+```
+
+A p-value can be included in the same result.
+
+```{r}
+format_f(
+  4.4344,
+  df1 = 1,
+  df2 = 3262.9,
+  p = 0.03530
+)
+```
+
+Very small p-values are handled through `format_p()`.
+
+```{r}
+format_f(
+  107.8924,
+  df1 = 1,
+  df2 = 86.7,
+  p = 2e-16
+)
+```
+
+This can be useful when converting ANOVA or mixed-model output into manuscript-ready text.
+
+For example, a result reported by R as approximately:
+
+```text
+NumDF  DenDF  F value  Pr(>F)
+1      86.7   107.8924 < 2e-16
+```
+
+can be represented as:
+
+```{r}
+format_f(
+  statistic = 107.8924,
+  df1 = 1,
+  df2 = 86.7,
+  p = 2e-16
+)
+```
+
+### Styled statistical symbols
+
+Plain character output is the default because the R console does not render italic text.
+
+For documents that support markup, `format_t()` and `format_f()` can return Markdown, HTML, or LaTeX formatting for statistical symbols.
+
+Markdown:
+
+```{r}
+format_f(
+  4.4344,
+  df1 = 1,
+  df2 = 3262.9,
+  p = 0.03530,
+  style = "markdown"
+)
+```
+
+HTML:
+
+```{r}
+format_t(
+  0.86,
+  df = 20,
+  p = 0.041,
+  style = "html"
+)
+```
+
+LaTeX:
+
+```{r}
+format_t(
+  0.86,
+  df = 20,
+  p = 0.041,
+  style = "latex"
+)
+```
+
+The styling option changes how the statistical symbols are represented for rendering. It does not change the underlying numeric result.
 
 ## A typical analysis-to-publication workflow
 
@@ -182,6 +353,26 @@ r_value
 format_r(r_value)
 ```
 
+### t statistic with p-value
+
+The coefficient table also contains the t statistic associated with the predictor.
+
+```{r}
+coef_table <- summary(model)$coefficients
+
+t_value <- coef_table["wt", "t value"]
+p_value <- coef_table["wt", "Pr(>|t|)"]
+df_value <- df.residual(model)
+
+format_t(
+  statistic = t_value,
+  df = df_value,
+  p = p_value
+)
+```
+
+This illustrates the intended separation: `lm()` calculates the model and inferential statistics, while `pubformat` formats the resulting numeric values.
+
 The workflow is therefore:
 
 ```text
@@ -203,11 +394,15 @@ publication-ready output
 
 The formatting functions are designed to accept vectors, which makes them useful when preparing tables or formatting several results at once.
 
+### P-values
+
 ```{r}
 p_values <- c(0.032, 0.006, 0.0004, 0.213)
 
 format_p(p_values)
 ```
+
+### Correlations
 
 ```{r}
 correlations <- c(0.42, -0.31, 0.18)
@@ -215,24 +410,55 @@ correlations <- c(0.42, -0.31, 0.18)
 format_r(correlations)
 ```
 
+### Percentages
+
 ```{r}
 proportions <- c(0.24, 0.51, 0.83)
 
 format_percent(proportions)
 ```
 
+### t statistics
+
+```{r}
+format_t(
+  statistic = c(0.86, -2.14, 3.27),
+  df = c(20, 48, 105.5),
+  p = c(0.041, 0.038, 0.0012)
+)
+```
+
+### F statistics
+
+```{r}
+format_f(
+  statistic = c(2.50, 4.4344),
+  df1 = c(2, 1),
+  df2 = c(30, 3262.9),
+  p = c(0.091, 0.03530)
+)
+```
+
 Missing values are preserved rather than silently converted into text.
 
 ```{r}
 format_p(c(0.032, NA, 0.213))
+
+format_t(
+  statistic = c(0.86, NA),
+  df = c(20, 30),
+  p = c(0.041, 0.200)
+)
 ```
 
 ## Design philosophy
 
 The package separates three concepts that can otherwise become conflated:
 
-1. **Statistical calculation** — performed by functions such as `lm()`, `cor()`, `confint()`, or other statistical packages.
+1. **Statistical calculation** — performed by functions such as `lm()`, `cor()`, `confint()`, or functions from other statistical packages.
 2. **Statistical decisions** — made using the original numeric results and the researcher's chosen inferential criteria.
 3. **Publication formatting** — performed by `pubformat` after the analysis is complete.
 
 This separation allows results to be formatted consistently without changing the values on which statistical conclusions are based.
+
+The same principle applies when test statistics and p-values are reported together. `format_t()` and `format_f()` accept already-computed statistics, degrees of freedom, and optional p-values. They do not recalculate the statistical test or determine the researcher's inferential decision.
