@@ -2,8 +2,13 @@
 
 export(format_ci)
 export(format_cor)
+export(format_d)
+export(format_eta2)
 export(format_f)
+export(format_g)
+export(format_omega2)
 export(format_p)
+export(format_partial_eta2)
 export(format_percent)
 export(format_r)
 export(format_t)
