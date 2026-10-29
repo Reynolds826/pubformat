@@ -1,6 +1,6 @@
 Package: pubformat
 Title: Publication-Ready Formatting for Statistical Results
-Version: 0.1.0.9000
+Version: 0.2.0
 Authors@R: person("RJ", "Ballotti", email = "rballotti@coastal.edu", role = c("aut", "cre"))
 Description: Provides tools for converting already-computed statistical results
     into consistent, publication-ready character output. Supports p-values,
