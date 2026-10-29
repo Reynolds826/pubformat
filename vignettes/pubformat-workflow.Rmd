@@ -22,13 +22,13 @@ The package is designed around a simple principle:
 
 > Statistical analysis and statistical formatting should remain separate.
 
-R or another statistical procedure produces the numeric result. `pubformat` handles the reporting step without changing the underlying statistical result or decision.
+R or another statistical procedure produces the numeric result. `pubformat` handles the reporting step without changing the underlying statistical result, inferential decision, or substantive interpretation.
 
 ```{r}
 library(pubformat)
 ```
 
-Current functionality includes formatting for:
+The current development version includes formatting for:
 
 - p-values
 - confidence intervals
@@ -36,6 +36,11 @@ Current functionality includes formatting for:
 - proportions and percentages
 - t test statistics
 - F test statistics
+- Cohen's d
+- Hedges' g
+- eta squared
+- partial eta squared
+- omega squared
 
 ## Formatting p-values
 
@@ -61,7 +66,7 @@ format_p(0.006, sig = TRUE)
 format_p(0.0002, sig = TRUE)
 ```
 
-Importantly, significance codes are determined from the original numeric p-value rather than its rounded display value.
+Significance codes are determined from the original numeric p-value rather than its rounded display value.
 
 ```{r}
 format_p(0.0499, sig = TRUE)
@@ -87,7 +92,7 @@ Leading zeros are retained by default because the appropriate convention depends
 format_ci(0.21, 0.48)
 ```
 
-For statistics that cannot exceed 1 in absolute value, such as correlations, leading zeros can be omitted.
+For statistics that cannot exceed 1 in absolute value, leading zeros can be omitted.
 
 ```{r}
 format_ci(0.21, 0.48, leading_zero = FALSE)
@@ -124,8 +129,6 @@ rho <- cor(
 format_cor(rho, method = "spearman")
 ```
 
-Associated p-values can be formatted separately with `format_p()`.
-
 ## Formatting percentages
 
 `format_percent()` interprets numeric values as proportions by default.
@@ -140,7 +143,7 @@ Values that are already expressed as percentages can be identified explicitly.
 format_percent(42.3, input = "percent")
 ```
 
-This distinction prevents accidental rescaling of values.
+This distinction prevents accidental rescaling.
 
 ```{r}
 format_percent(0.42)
@@ -153,7 +156,7 @@ The function is vectorized.
 format_percent(c(0.25, 0.50, 0.75))
 ```
 
-Values supplied with `input = "percent"` may also be negative or greater than 100, which is useful for quantities such as percent change.
+Values supplied with `input = "percent"` may also be negative or greater than 100, which can be useful for quantities such as percent change.
 
 ```{r}
 format_percent(-12.5, input = "percent")
@@ -196,7 +199,7 @@ format_t(
 )
 ```
 
-The p-value is formatted internally using `format_p()`. This means the same reporting rules are retained.
+The p-value is formatted internally using `format_p()`.
 
 ```{r}
 format_t(
@@ -206,7 +209,7 @@ format_t(
 )
 ```
 
-The underlying distinction between `p = .001` and `p < .001` is therefore preserved.
+This preserves the distinction between `p = .001` and `p < .001`.
 
 ### F statistics
 
@@ -241,7 +244,7 @@ format_f(
 )
 ```
 
-Very small p-values are handled through `format_p()`.
+Very small p-values retain the behavior of `format_p()`.
 
 ```{r}
 format_f(
@@ -252,33 +255,13 @@ format_f(
 )
 ```
 
-This can be useful when converting ANOVA or mixed-model output into manuscript-ready text.
+This is useful for converting ANOVA or mixed-model output into manuscript-ready text.
 
-For example, a result reported by R as approximately:
+### Styled test-statistic symbols
 
-```text
-NumDF  DenDF  F value  Pr(>F)
-1      86.7   107.8924 < 2e-16
-```
+Plain character output is the default because the R console does not render italics.
 
-can be represented as:
-
-```{r}
-format_f(
-  statistic = 107.8924,
-  df1 = 1,
-  df2 = 86.7,
-  p = 2e-16
-)
-```
-
-### Styled statistical symbols
-
-Plain character output is the default because the R console does not render italic text.
-
-For documents that support markup, `format_t()` and `format_f()` can return Markdown, HTML, or LaTeX formatting for statistical symbols.
-
-Markdown:
+For documents that support markup, `format_t()` and `format_f()` can return Markdown, HTML, or LaTeX formatting.
 
 ```{r}
 format_f(
@@ -290,29 +273,161 @@ format_f(
 )
 ```
 
-HTML:
+## Formatting effect sizes
+
+The effect-size functions accept already-computed estimates and optional confidence intervals.
+
+They do not calculate the effect size and do not classify the result as small, medium, or large.
+
+### Cohen's d
+
+`format_d()` formats Cohen's d.
 
 ```{r}
-format_t(
-  0.86,
-  df = 20,
-  p = 0.041,
-  style = "html"
+format_d(0.52)
+```
+
+Confidence limits can be included.
+
+```{r}
+format_d(
+  0.52,
+  lower = 0.18,
+  upper = 0.86
 )
 ```
 
-LaTeX:
+Negative estimates and confidence limits are preserved.
 
 ```{r}
-format_t(
-  0.86,
-  df = 20,
-  p = 0.041,
-  style = "latex"
+format_d(
+  -0.31,
+  lower = -0.62,
+  upper = 0.00
 )
 ```
 
-The styling option changes how the statistical symbols are represented for rendering. It does not change the underlying numeric result.
+For output formats that support markup, the Latin statistical symbol can also be styled.
+
+```{r}
+format_d(
+  0.52,
+  lower = 0.18,
+  upper = 0.86,
+  style = "markdown"
+)
+```
+
+### Hedges' g
+
+`format_g()` follows the same structure for Hedges' g.
+
+```{r}
+format_g(0.49)
+```
+
+```{r}
+format_g(
+  0.49,
+  lower = 0.16,
+  upper = 0.82
+)
+```
+
+Styled output is also available.
+
+```{r}
+format_g(
+  0.49,
+  lower = 0.16,
+  upper = 0.82,
+  style = "markdown"
+)
+```
+
+### Eta squared
+
+`format_eta2()` automatically provides the eta-squared symbol.
+
+```{r}
+format_eta2(0.14)
+```
+
+A confidence interval can be supplied.
+
+```{r}
+format_eta2(
+  0.14,
+  lower = 0.08,
+  upper = 0.21
+)
+```
+
+Eta squared is bounded between 0 and 1, so leading zeros are omitted.
+
+```{r}
+format_eta2(
+  eta2 = c(0.14, 0.00, 0.67),
+  lower = c(0.08, 0.00, 0.55),
+  upper = c(0.21, 0.04, 0.78)
+)
+```
+
+### Partial eta squared
+
+`format_partial_eta2()` automatically supplies the partial eta-squared notation.
+
+```{r}
+format_partial_eta2(0.14)
+```
+
+The returned character output contains the Greek eta, subscript p, and superscript 2 directly.
+
+```{r}
+format_partial_eta2(
+  0.14,
+  lower = 0.08,
+  upper = 0.21
+)
+```
+
+This avoids the need to manually insert the notation in a word processor.
+
+### Omega squared
+
+`format_omega2()` automatically supplies the omega-squared symbol.
+
+```{r}
+format_omega2(0.08)
+```
+
+Confidence limits can be supplied.
+
+```{r}
+format_omega2(
+  0.08,
+  lower = 0.02,
+  upper = 0.15
+)
+```
+
+Negative omega-squared estimates are preserved rather than automatically changed to zero.
+
+```{r}
+format_omega2(-0.02)
+```
+
+Likewise, negative confidence-limit estimates remain unchanged.
+
+```{r}
+format_omega2(
+  0.01,
+  lower = -0.03,
+  upper = 0.05
+)
+```
+
+This reflects the package's role as a formatter rather than a statistical decision-making tool.
 
 ## A typical analysis-to-publication workflow
 
@@ -355,8 +470,6 @@ format_r(r_value)
 
 ### t statistic with p-value
 
-The coefficient table also contains the t statistic associated with the predictor.
-
 ```{r}
 coef_table <- summary(model)$coefficients
 
@@ -371,7 +484,25 @@ format_t(
 )
 ```
 
-This illustrates the intended separation: `lm()` calculates the model and inferential statistics, while `pubformat` formats the resulting numeric values.
+Effect sizes follow the same pattern: calculate the effect size using the appropriate statistical method and then pass the resulting estimate and optional confidence limits to a `pubformat` formatter.
+
+For example, if an analysis has already produced:
+
+```{r}
+d_value <- 0.52
+d_lower <- 0.18
+d_upper <- 0.86
+```
+
+the reporting step is:
+
+```{r}
+format_d(
+  d_value,
+  lower = d_lower,
+  upper = d_upper
+)
+```
 
 The workflow is therefore:
 
@@ -418,7 +549,7 @@ proportions <- c(0.24, 0.51, 0.83)
 format_percent(proportions)
 ```
 
-### t statistics
+### Test statistics
 
 ```{r}
 format_t(
@@ -427,8 +558,6 @@ format_t(
   p = c(0.041, 0.038, 0.0012)
 )
 ```
-
-### F statistics
 
 ```{r}
 format_f(
@@ -439,15 +568,31 @@ format_f(
 )
 ```
 
+### Effect sizes
+
+```{r}
+format_d(
+  d = c(0.52, -0.31, 1.14),
+  lower = c(0.18, -0.62, 0.80),
+  upper = c(0.86, 0.00, 1.48)
+)
+```
+
+```{r}
+format_omega2(
+  omega2 = c(0.08, -0.02, 0.31),
+  lower = c(0.02, -0.06, 0.20),
+  upper = c(0.15, 0.02, 0.42)
+)
+```
+
 Missing values are preserved rather than silently converted into text.
 
 ```{r}
-format_p(c(0.032, NA, 0.213))
-
-format_t(
-  statistic = c(0.86, NA),
-  df = c(20, 30),
-  p = c(0.041, 0.200)
+format_eta2(
+  eta2 = c(0.14, NA, 0.67),
+  lower = c(0.08, 0.01, 0.55),
+  upper = c(0.21, 0.10, 0.78)
 )
 ```
 
@@ -456,9 +601,11 @@ format_t(
 The package separates three concepts that can otherwise become conflated:
 
 1. **Statistical calculation** — performed by functions such as `lm()`, `cor()`, `confint()`, or functions from other statistical packages.
-2. **Statistical decisions** — made using the original numeric results and the researcher's chosen inferential criteria.
+2. **Statistical decisions and interpretation** — made using the original numeric results, the research design, and the researcher's chosen inferential criteria.
 3. **Publication formatting** — performed by `pubformat` after the analysis is complete.
 
 This separation allows results to be formatted consistently without changing the values on which statistical conclusions are based.
 
-The same principle applies when test statistics and p-values are reported together. `format_t()` and `format_f()` accept already-computed statistics, degrees of freedom, and optional p-values. They do not recalculate the statistical test or determine the researcher's inferential decision.
+The same principle applies to effect sizes. `pubformat` does not automatically classify an effect as small, medium, or large. Instead, it preserves the supplied estimate and, when available, its confidence interval.
+
+This keeps reporting reproducible while leaving substantive interpretation with the researcher.

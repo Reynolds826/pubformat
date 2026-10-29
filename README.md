@@ -8,7 +8,7 @@
 
 The package is built around a simple principle: **formatting should improve how statistical results are reported without changing the underlying statistical result or statistical decision**.
 
-Current functions include:
+The current development version includes:
 
 * `format_p()` for p-values
 * `format_ci()` for confidence intervals
@@ -17,12 +17,17 @@ Current functions include:
 * `format_percent()` for proportions and percentages
 * `format_t()` for t test statistics
 * `format_f()` for F test statistics
+* `format_d()` for Cohen's d
+* `format_g()` for Hedges' g
+* `format_eta2()` for eta squared
+* `format_partial_eta2()` for partial eta squared
+* `format_omega2()` for omega squared
 
 The package uses publication-friendly defaults while allowing common formatting choices to be customized.
 
 ## Installation
 
-You can install the released version of `pubformat` from CRAN:
+The released version of `pubformat` is available from CRAN:
 
 ```r
 install.packages("pubformat")
@@ -34,12 +39,14 @@ Load the package with:
 library(pubformat)
 ```
 
-The development version can be installed from GitHub with:
+The development version can be installed from GitHub:
 
 ```r
 # install.packages("remotes")
 remotes::install_github("Reynolds826/pubformat")
 ```
+
+The GitHub development version may contain functions and features that have not yet been included in the latest CRAN release.
 
 If you are working from a local copy of the package source, you can also install it with:
 
@@ -90,9 +97,7 @@ format_p(0.0002, sig = TRUE)
 #> "p < .001 ***"
 ```
 
-Significance codes are calculated from the original numeric p-value rather than the rounded value.
-
-For example:
+Significance codes are calculated from the original numeric p-value rather than the rounded display value.
 
 ```r
 format_p(0.0499, sig = TRUE)
@@ -148,7 +153,7 @@ This prevents positive p-values from being reported as values such as `p = .000`
 
 ## Confidence intervals
 
-`format_ci()` converts numeric lower and upper confidence limits into publication-ready text.
+`format_ci()` combines numeric lower and upper confidence limits into publication-ready interval notation.
 
 ```r
 format_ci(1.08, 1.87)
@@ -162,14 +167,14 @@ format_ci(1.08, 1.87, level = 0.99)
 #> "99% CI [1.08, 1.87]"
 ```
 
-By default, leading zeros are retained because the appropriate convention depends on the statistic being reported:
+Leading zeros are retained by default because the appropriate convention depends on the statistic being reported:
 
 ```r
 format_ci(0.21, 0.48)
 #> "95% CI [0.21, 0.48]"
 ```
 
-For statistics that cannot exceed 1 in absolute value, such as correlations, leading zeros can be removed:
+For statistics that cannot exceed 1 in absolute value, leading zeros can be omitted:
 
 ```r
 format_ci(0.21, 0.48, leading_zero = FALSE)
@@ -192,7 +197,7 @@ format_ci(lower, upper)
 
 ### Pearson correlations
 
-`format_r()` provides a simple formatter for Pearson correlation coefficients.
+`format_r()` provides a concise formatter for Pearson correlation coefficients.
 
 ```r
 format_r(0.42)
@@ -234,7 +239,7 @@ format_r(c(0.42, -0.31, 0, 0.78))
 
 ### Pearson, Spearman, and Kendall correlations
 
-`format_cor()` provides a general correlation formatter and automatically uses the symbol associated with the requested method.
+`format_cor()` provides a general correlation formatter and automatically uses the reporting symbol associated with the requested method.
 
 Pearson:
 
@@ -267,18 +272,18 @@ format_cor(-0.31, method = "kendall")
 #> "τ = -.31"
 ```
 
-The `method` argument controls the reporting symbol only. `format_cor()` does not calculate the correlation or determine statistical significance.
+`format_cor()` formats an existing coefficient. It does not calculate the correlation or determine statistical significance.
 
-For example, a Spearman correlation can first be calculated in R and then formatted:
+For example:
 
 ```r
-result <- cor(
+rho <- cor(
   mtcars$mpg,
   mtcars$wt,
   method = "spearman"
 )
 
-format_cor(result, method = "spearman")
+format_cor(rho, method = "spearman")
 ```
 
 Associated p-values can be formatted separately with `format_p()`.
@@ -341,7 +346,7 @@ format_percent(150, input = "percent")
 
 `format_t()` and `format_f()` convert already-computed test statistics and their degrees of freedom into publication-ready text.
 
-These functions do not perform the statistical test. They format numeric results produced by R or another statistical procedure.
+These functions do not perform statistical tests. They format numeric results produced by R or another statistical procedure.
 
 ### t statistics
 
@@ -352,14 +357,14 @@ format_t(0.86, df = 20)
 #> "t(20) = 0.86"
 ```
 
-Negative test statistics are preserved:
+Negative statistics are preserved:
 
 ```r
 format_t(-2.14, df = 48)
 #> "t(48) = -2.14"
 ```
 
-Fractional degrees of freedom, such as those produced by some approximation methods, are also supported:
+Fractional degrees of freedom are also supported:
 
 ```r
 format_t(3.27, df = 105.5)
@@ -377,21 +382,16 @@ format_t(
 #> "t(20) = 0.86, p = .041"
 ```
 
-The p-value is formatted using `format_p()`, so the same reporting rules are retained:
+The p-value is formatted through `format_p()`, so the same reporting rules are retained:
 
 ```r
 format_t(
-  3.10,
-  df = 40,
-  p = 0.001
+  statistic = c(3.10, 3.20),
+  df = c(40, 40),
+  p = c(0.001, 0.0009)
 )
-#> "t(40) = 3.10, p = .001"
 
-format_t(
-  3.20,
-  df = 40,
-  p = 0.0009
-)
+#> "t(40) = 3.10, p = .001"
 #> "t(40) = 3.20, p < .001"
 ```
 
@@ -419,7 +419,7 @@ format_f(
 #> "F(1, 3262.9) = 4.43"
 ```
 
-A p-value can be included in the same output:
+A p-value can be included in the same result:
 
 ```r
 format_f(
@@ -431,7 +431,7 @@ format_f(
 #> "F(1, 3262.9) = 4.43, p = .035"
 ```
 
-Very small p-values are handled through `format_p()`:
+Very small p-values retain the behavior of `format_p()`:
 
 ```r
 format_f(
@@ -443,23 +443,13 @@ format_f(
 #> "F(1, 86.7) = 107.89, p < .001"
 ```
 
-This can be useful when converting model output such as ANOVA or mixed-model results into manuscript-ready text.
+This is useful for converting ANOVA or mixed-model output into manuscript-ready text.
 
 ### Styled statistical symbols
 
-By default, `format_t()` and `format_f()` return plain character output suitable for the R console:
+Plain output is the default because ordinary R console output does not render italics.
 
-```r
-format_f(
-  4.4344,
-  df1 = 1,
-  df2 = 3262.9,
-  p = 0.03530
-)
-#> "F(1, 3262.9) = 4.43, p = .035"
-```
-
-For output formats that support rendered text, the `style` argument can produce markup for statistical symbols.
+For output formats that support markup, `format_t()` and `format_f()` can return Markdown, HTML, or LaTeX formatting.
 
 Markdown:
 
@@ -498,91 +488,263 @@ format_t(
 #> "\\textit{t}(20) = 0.86, \\textit{p} = .041"
 ```
 
-The plain R console does not render italics, so styled output is intended for formats such as Markdown, HTML, or LaTeX.
+## Effect sizes
 
-### Vectorized test-statistic formatting
+The development version of `pubformat` includes formatters for several commonly reported effect sizes.
 
-Like the other `pubformat` functions, `format_t()` and `format_f()` accept vectors.
+As with the rest of the package, these functions **do not calculate or interpret effect sizes**. They format values that have already been computed.
 
-```r
-format_t(
-  statistic = c(0.86, -2.14, 3.27),
-  df = c(20, 48, 105.5),
-  p = c(0.041, 0.038, 0.0012)
-)
+Optional confidence intervals can be supplied directly.
 
-#> "t(20) = 0.86, p = .041"
-#> "t(48) = -2.14, p = .038"
-#> "t(105.5) = 3.27, p = .001"
-```
+### Cohen's d
 
-Similarly:
+`format_d()` formats Cohen's d:
 
 ```r
-format_f(
-  statistic = c(2.50, 4.4344),
-  df1 = c(2, 1),
-  df2 = c(30, 3262.9),
-  p = c(0.091, 0.03530)
+format_d(0.52)
+#> "d = 0.52"
+```
+
+Confidence intervals can be included:
+
+```r
+format_d(
+  0.52,
+  lower = 0.18,
+  upper = 0.86
+)
+#> "d = 0.52, 95% CI [0.18, 0.86]"
+```
+
+Negative effects are preserved:
+
+```r
+format_d(
+  -0.31,
+  lower = -0.62,
+  upper = 0.00
+)
+#> "d = -0.31, 95% CI [-0.62, 0.00]"
+```
+
+For rendered documents, the `d` symbol can be returned with Markdown, HTML, or LaTeX styling:
+
+```r
+format_d(
+  0.52,
+  lower = 0.18,
+  upper = 0.86,
+  style = "markdown"
+)
+#> "*d* = 0.52, 95% CI [0.18, 0.86]"
+```
+
+### Hedges' g
+
+`format_g()` follows the same structure for Hedges' g:
+
+```r
+format_g(0.49)
+#> "g = 0.49"
+```
+
+With a confidence interval:
+
+```r
+format_g(
+  0.49,
+  lower = 0.16,
+  upper = 0.82
+)
+#> "g = 0.49, 95% CI [0.16, 0.82]"
+```
+
+Styled output is also supported:
+
+```r
+format_g(
+  0.49,
+  lower = 0.16,
+  upper = 0.82,
+  style = "markdown"
+)
+#> "*g* = 0.49, 95% CI [0.16, 0.82]"
+```
+
+### Eta squared
+
+`format_eta2()` automatically supplies the eta-squared symbol:
+
+```r
+format_eta2(0.14)
+#> "η² = .14"
+```
+
+Confidence intervals follow the same bounded-statistic formatting convention:
+
+```r
+format_eta2(
+  0.14,
+  lower = 0.08,
+  upper = 0.21
+)
+#> "η² = .14, 95% CI [.08, .21]"
+```
+
+Because eta squared is bounded between 0 and 1, leading zeros are omitted.
+
+### Partial eta squared
+
+`format_partial_eta2()` automatically supplies the partial eta-squared symbol:
+
+```r
+format_partial_eta2(0.14)
+#> "ηₚ² = .14"
+```
+
+With a confidence interval:
+
+```r
+format_partial_eta2(
+  0.14,
+  lower = 0.08,
+  upper = 0.21
+)
+#> "ηₚ² = .14, 95% CI [.08, .21]"
+```
+
+The Unicode notation is included directly in the returned character output, avoiding the need to manually insert eta, a subscript p, and a superscript 2 in a word processor.
+
+### Omega squared
+
+`format_omega2()` automatically supplies the omega-squared symbol:
+
+```r
+format_omega2(0.08)
+#> "ω² = .08"
+```
+
+Confidence intervals can be included:
+
+```r
+format_omega2(
+  0.08,
+  lower = 0.02,
+  upper = 0.15
+)
+#> "ω² = .08, 95% CI [.02, .15]"
+```
+
+Negative omega-squared estimates are preserved rather than automatically truncated to zero:
+
+```r
+format_omega2(-0.02)
+#> "ω² = -.02"
+```
+
+Negative confidence-limit estimates are also retained:
+
+```r
+format_omega2(
+  0.01,
+  lower = -0.03,
+  upper = 0.05
+)
+#> "ω² = .01, 95% CI [-.03, .05]"
+```
+
+This reflects the package's general principle of formatting the supplied numeric result rather than changing the statistical estimate.
+
+### Vectorized effect-size formatting
+
+The effect-size functions accept vectors.
+
+```r
+format_d(
+  d = c(0.52, -0.31, 1.14),
+  lower = c(0.18, -0.62, 0.80),
+  upper = c(0.86, 0.00, 1.48)
 )
 
-#> "F(2, 30) = 2.50, p = .091"
-#> "F(1, 3262.9) = 4.43, p = .035"
+#> "d = 0.52, 95% CI [0.18, 0.86]"
+#> "d = -0.31, 95% CI [-0.62, 0.00]"
+#> "d = 1.14, 95% CI [0.80, 1.48]"
 ```
+
+Likewise:
+
+```r
+format_eta2(
+  eta2 = c(0.14, 0.00, 0.67),
+  lower = c(0.08, 0.00, 0.55),
+  upper = c(0.21, 0.04, 0.78)
+)
+
+#> "η² = .14, 95% CI [.08, .21]"
+#> "η² = .00, 95% CI [.00, .04]"
+#> "η² = .67, 95% CI [.55, .78]"
+```
+
+Missing values are preserved rather than silently converted into text.
 
 ## Research workflow example
 
 `pubformat` is designed to handle the reporting step after statistical analysis rather than perform the analysis itself.
 
-For example, a linear model can produce numeric p-values:
+Consider a simple linear model using the built-in `mtcars` data:
 
 ```r
-model <- lm(mpg ~ wt + am, data = mtcars)
+model <- lm(mpg ~ wt, data = mtcars)
 
-p_values <- summary(model)$coefficients[, "Pr(>|t|)"]
+summary(model)
 ```
 
-Those numeric results can then be formatted for reporting:
+The analysis produces numeric statistical results. Those values can then be extracted and formatted separately.
+
+### P-value
 
 ```r
-format_p(p_values)
+p_value <- summary(model)$coefficients["wt", "Pr(>|t|)"]
+
+p_value
+format_p(p_value)
 ```
 
-For multiple-comparison procedures, adjusted p-values can be formatted in the same way:
+### Confidence interval
 
 ```r
-raw_p <- c(.012, .031, .0004, .18)
+ci <- confint(model, "wt")
 
-adjusted_p <- p.adjust(
-  raw_p,
-  method = "bonferroni"
-)
-
-format_p(adjusted_p)
+ci
+format_ci(ci[1], ci[2])
 ```
 
-`format_p()` does not perform the statistical correction itself. It formats the numeric results produced by R while preserving important reporting boundaries.
-
-Similarly, statistics can be calculated first and formatted afterward:
+### Correlation
 
 ```r
 r_value <- cor(mtcars$mpg, mtcars$wt)
 
+r_value
 format_r(r_value)
 ```
 
-Test statistics can also be taken from model output and formatted together with their degrees of freedom and p-values:
+### t statistic with p-value
 
 ```r
-format_f(
-  statistic = 4.4344,
-  df1 = 1,
-  df2 = 3262.9,
-  p = 0.03530
-)
+coef_table <- summary(model)$coefficients
 
-#> "F(1, 3262.9) = 4.43, p = .035"
+t_value <- coef_table["wt", "t value"]
+p_value <- coef_table["wt", "Pr(>|t|)"]
+df_value <- df.residual(model)
+
+format_t(
+  statistic = t_value,
+  df = df_value,
+  p = p_value
+)
 ```
+
+The same principle applies to effect sizes: calculate or estimate the effect using an appropriate statistical procedure, then pass the resulting numeric estimate and optional confidence limits to the relevant `pubformat` function.
 
 The intended workflow is:
 
@@ -596,11 +758,25 @@ pubformat
 publication-ready output
 ```
 
+`pubformat` does not replace statistical analysis functions. Its purpose is to make the final reporting step more consistent, reproducible, and convenient.
+
+## Design philosophy
+
+The package separates three concepts that can otherwise become conflated:
+
+1. **Statistical calculation** — performed by functions such as `lm()`, `cor()`, `confint()`, or functions from other statistical packages.
+2. **Statistical decisions and interpretation** — made using the original numeric results, the research design, and the researcher's chosen inferential criteria.
+3. **Publication formatting** — performed by `pubformat` after the analysis is complete.
+
+This separation allows results to be formatted consistently without changing the values on which statistical conclusions are based.
+
+For this reason, `pubformat` does not automatically label effect sizes as "small," "medium," or "large." Effect-size interpretation depends on context, discipline, design, and the measure being reported.
+
 ## Development status
 
 `pubformat` is available on CRAN and remains under active development.
 
-Current functionality includes publication-ready formatting for:
+The current development version includes publication-ready formatting for:
 
 * p-values
 * confidence intervals
@@ -610,6 +786,13 @@ Current functionality includes publication-ready formatting for:
 * t test statistics
 * F test statistics
 * paired test statistics and p-values
-* plain, Markdown, HTML, and LaTeX output for t and F statistical symbols
+* Cohen's d
+* Hedges' g
+* eta squared
+* partial eta squared
+* omega squared
+* optional confidence intervals for effect sizes
+* plain, Markdown, HTML, and LaTeX output for supported Latin statistical symbols
+* direct Unicode output for common Greek statistical symbols
 
-Future development may include formatting for effect sizes, estimates, sample sizes, additional test statistics, and other commonly reported statistical results.
+Future development may include additional effect sizes, estimates, sample sizes, additional test statistics, and other commonly reported statistical results.
