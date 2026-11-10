@@ -1,5 +1,42 @@
 # pubformat 0.2.0.9000
 
+## New features
+
+### Categorical-statistics formatting
+
+* Added `format_chisq()` for publication-ready formatting of chi-square test statistics and degrees of freedom.
+
+* `format_chisq()` can optionally include p-values using the existing `format_p()` behavior.
+
+* Added `format_phi()` for formatting phi coefficients with optional confidence intervals.
+
+* Added `format_cramers_v()` for formatting Cramér's V with optional confidence intervals.
+
+* Added `format_or()` for formatting odds ratios with optional confidence intervals.
+
+* Added `format_rr()` for formatting risk ratios with optional confidence intervals.
+
+* Added optional plain, Markdown, HTML, and LaTeX output for Cramér's V, odds-ratio, and risk-ratio statistical symbols.
+
+* Odds-ratio and risk-ratio formatting preserves leading zeros and accepts nonnegative already-computed estimates, including zero.
+
+* Categorical-statistics functions are vectorized, preserve names and missing values, and validate statistic-specific input ranges.
+
+## Documentation
+
+* Added documentation and examples for chi-square statistics, phi coefficients, Cramér's V, odds ratios, and risk ratios.
+
+* Continued the package design principle that `pubformat` formats already-computed statistical results rather than calculating or interpreting them.
+
+## Testing
+
+* Added automated tests for `format_chisq()`, `format_phi()`, `format_cramers_v()`, `format_or()`, and `format_rr()`.
+
+* The package test suite now includes 530 passing tests.
+
+* The development version passes `R CMD check` with 0 errors, 0 warnings, and 0 notes.
+
+
 # pubformat 0.2.0
 
 ## New features

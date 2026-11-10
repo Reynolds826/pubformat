@@ -17,11 +17,16 @@ The current development version includes:
 * `format_percent()` for proportions and percentages
 * `format_t()` for t test statistics
 * `format_f()` for F test statistics
+* `format_chisq()` for chi-square test statistics
 * `format_d()` for Cohen's d
 * `format_g()` for Hedges' g
 * `format_eta2()` for eta squared
 * `format_partial_eta2()` for partial eta squared
 * `format_omega2()` for omega squared
+* `format_phi()` for phi coefficients
+* `format_cramers_v()` for Cramér's V
+* `format_or()` for odds ratios
+* `format_rr()` for risk ratios
 
 The package uses publication-friendly defaults while allowing common formatting choices to be customized.
 
@@ -344,7 +349,7 @@ format_percent(150, input = "percent")
 
 ## Test statistics
 
-`format_t()` and `format_f()` convert already-computed test statistics and their degrees of freedom into publication-ready text.
+`format_t()`, `format_f()`, and `format_chisq()` convert already-computed test statistics and their degrees of freedom into publication-ready text.
 
 These functions do not perform statistical tests. They format numeric results produced by R or another statistical procedure.
 
@@ -445,6 +450,52 @@ format_f(
 
 This is useful for converting ANOVA or mixed-model output into manuscript-ready text.
 
+### Chi-square statistics
+
+`format_chisq()` formats an already-computed chi-square statistic together with its degrees of freedom:
+
+```r
+format_chisq(8.43, df = 2)
+#> "χ²(2) = 8.43"
+```
+
+A p-value can be supplied directly:
+
+```r
+format_chisq(
+  8.43,
+  df = 2,
+  p = 0.015
+)
+#> "χ²(2) = 8.43, p = .015"
+```
+
+Very small p-values use the same reporting rules as `format_p()`:
+
+```r
+format_chisq(
+  18.38,
+  df = 2,
+  p = 0.000102
+)
+#> "χ²(2) = 18.38, p < .001"
+```
+
+The `.001` boundary remains strict:
+
+```r
+format_chisq(
+  statistic = c(10.83, 11.20),
+  df = c(2, 2),
+  p = c(0.001, 0.0009)
+)
+
+#> "χ²(2) = 10.83, p = .001"
+#> "χ²(2) = 11.20, p < .001"
+```
+
+As with the other test-statistic formatters, `format_chisq()` reports supplied values rather than performing the statistical test.
+
 ### Styled statistical symbols
 
 Plain output is the default because ordinary R console output does not render italics.
@@ -487,6 +538,8 @@ format_t(
 )
 #> "\\textit{t}(20) = 0.86, \\textit{p} = .041"
 ```
+
+`format_chisq()` uses the direct Unicode chi-square symbol (`χ²`) in its returned output.
 
 ## Effect sizes
 
@@ -687,6 +740,221 @@ format_eta2(
 
 Missing values are preserved rather than silently converted into text.
 
+## Categorical effect sizes and ratio measures
+
+The development version also includes formatters for commonly reported categorical association measures and ratios.
+
+As with the rest of `pubformat`, these functions accept **already-computed numeric results**. They do not calculate contingency-table statistics or interpret the magnitude of an association.
+
+### Phi coefficient
+
+`format_phi()` formats phi coefficients using direct Unicode notation:
+
+```r
+format_phi(0.32)
+#> "φ = .32"
+```
+
+Negative coefficients are preserved:
+
+```r
+format_phi(-0.24)
+#> "φ = -.24"
+```
+
+Optional confidence intervals can be supplied:
+
+```r
+format_phi(
+  0.32,
+  lower = 0.12,
+  upper = 0.49
+)
+#> "φ = .32, 95% CI [.12, .49]"
+```
+
+Because phi is bounded between -1 and 1, leading zeros are omitted.
+
+### Cramér's V
+
+`format_cramers_v()` formats Cramér's V:
+
+```r
+format_cramers_v(0.32)
+#> "V = .32"
+```
+
+A confidence interval can be included:
+
+```r
+format_cramers_v(
+  0.32,
+  lower = 0.18,
+  upper = 0.45
+)
+#> "V = .32, 95% CI [.18, .45]"
+```
+
+Cramér's V is bounded between 0 and 1, so leading zeros are omitted.
+
+Rendered output can use Markdown, HTML, or LaTeX styling:
+
+```r
+format_cramers_v(
+  0.32,
+  lower = 0.18,
+  upper = 0.45,
+  style = "markdown"
+)
+#> "*V* = .32, 95% CI [.18, .45]"
+```
+
+### Odds ratios
+
+`format_or()` formats already-computed odds ratios:
+
+```r
+format_or(1.84)
+#> "OR = 1.84"
+```
+
+Values below 1 retain their leading zero:
+
+```r
+format_or(0.62)
+#> "OR = 0.62"
+```
+
+Confidence intervals can be included:
+
+```r
+format_or(
+  1.84,
+  lower = 1.20,
+  upper = 2.82
+)
+#> "OR = 1.84, 95% CI [1.20, 2.82]"
+```
+
+Likewise:
+
+```r
+format_or(
+  0.62,
+  lower = 0.41,
+  upper = 0.94
+)
+#> "OR = 0.62, 95% CI [0.41, 0.94]"
+```
+
+Valid zero estimates are preserved rather than changed:
+
+```r
+format_or(0)
+#> "OR = 0.00"
+```
+
+Styled output is available for rendered documents:
+
+```r
+format_or(
+  1.84,
+  lower = 1.20,
+  upper = 2.82,
+  style = "markdown"
+)
+#> "*OR* = 1.84, 95% CI [1.20, 2.82]"
+```
+
+### Risk ratios
+
+`format_rr()` follows the same structure for risk ratios:
+
+```r
+format_rr(1.52)
+#> "RR = 1.52"
+```
+
+Values below 1 retain their leading zero:
+
+```r
+format_rr(0.74)
+#> "RR = 0.74"
+```
+
+Confidence intervals can be included:
+
+```r
+format_rr(
+  1.52,
+  lower = 1.18,
+  upper = 1.96
+)
+#> "RR = 1.52, 95% CI [1.18, 1.96]"
+```
+
+Likewise:
+
+```r
+format_rr(
+  0.74,
+  lower = 0.58,
+  upper = 0.95
+)
+#> "RR = 0.74, 95% CI [0.58, 0.95]"
+```
+
+Valid zero estimates are preserved:
+
+```r
+format_rr(0)
+#> "RR = 0.00"
+```
+
+Markdown, HTML, and LaTeX styling are also supported:
+
+```r
+format_rr(
+  1.52,
+  lower = 1.18,
+  upper = 1.96,
+  style = "markdown"
+)
+#> "*RR* = 1.52, 95% CI [1.18, 1.96]"
+```
+
+### Vectorized categorical formatting
+
+The categorical formatters accept vectors and preserve missing values.
+
+For example:
+
+```r
+format_or(
+  odds_ratio = c(1.84, 0.62, 3.10),
+  lower = c(1.20, 0.41, 1.75),
+  upper = c(2.82, 0.94, 5.49)
+)
+
+#> "OR = 1.84, 95% CI [1.20, 2.82]"
+#> "OR = 0.62, 95% CI [0.41, 0.94]"
+#> "OR = 3.10, 95% CI [1.75, 5.49]"
+```
+
+Missing values remain missing:
+
+```r
+format_rr(
+  risk_ratio = c(1.52, NA, 0.74),
+  lower = c(1.18, 0.80, 0.58),
+  upper = c(1.96, 1.10, 0.95)
+)
+
+#> "RR = 1.52, 95% CI [1.18, 1.96]"
+#> NA
+#> "RR = 0.74, 95% CI [0.58, 0.95]"
+```
+
 ## Research workflow example
 
 `pubformat` is designed to handle the reporting step after statistical analysis rather than perform the analysis itself.
@@ -744,7 +1012,7 @@ format_t(
 )
 ```
 
-The same principle applies to effect sizes: calculate or estimate the effect using an appropriate statistical procedure, then pass the resulting numeric estimate and optional confidence limits to the relevant `pubformat` function.
+The same principle applies to effect sizes and categorical measures: calculate or estimate the statistic using an appropriate statistical procedure, then pass the resulting numeric estimate and optional confidence limits to the relevant `pubformat` function.
 
 The intended workflow is:
 
@@ -764,13 +1032,13 @@ publication-ready output
 
 The package separates three concepts that can otherwise become conflated:
 
-1. **Statistical calculation** — performed by functions such as `lm()`, `cor()`, `confint()`, or functions from other statistical packages.
+1. **Statistical calculation** — performed by functions such as `lm()`, `cor()`, `confint()`, contingency-table procedures, or functions from other statistical packages.
 2. **Statistical decisions and interpretation** — made using the original numeric results, the research design, and the researcher's chosen inferential criteria.
 3. **Publication formatting** — performed by `pubformat` after the analysis is complete.
 
 This separation allows results to be formatted consistently without changing the values on which statistical conclusions are based.
 
-For this reason, `pubformat` does not automatically label effect sizes as "small," "medium," or "large." Effect-size interpretation depends on context, discipline, design, and the measure being reported.
+For this reason, `pubformat` does not automatically label effect sizes or association measures as "small," "medium," or "large." Interpretation depends on context, discipline, design, and the measure being reported.
 
 ## Development status
 
@@ -785,14 +1053,21 @@ The current development version includes publication-ready formatting for:
 * proportions and percentages
 * t test statistics
 * F test statistics
+* chi-square test statistics
 * paired test statistics and p-values
 * Cohen's d
 * Hedges' g
 * eta squared
 * partial eta squared
 * omega squared
-* optional confidence intervals for effect sizes
+* phi coefficients
+* Cramér's V
+* odds ratios
+* risk ratios
+* optional confidence intervals for supported effect-size and association measures
 * plain, Markdown, HTML, and LaTeX output for supported Latin statistical symbols
 * direct Unicode output for common Greek statistical symbols
 
-Future development may include additional effect sizes, estimates, sample sizes, additional test statistics, and other commonly reported statistical results.
+The development version currently includes **530 passing automated tests** and passes `R CMD check` with **0 errors, 0 warnings, and 0 notes**.
+
+Future development may include regression and model-reporting quantities, additional effect sizes, estimates, sample sizes, additional test statistics, and other commonly reported statistical results.
